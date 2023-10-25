@@ -118,57 +118,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response)
 
 
-async def handle_create_queue(update: Update, context: CallbackContext):
-    chat_id = update.message.chat_id
-    user_id = update.message.from_user.id
-    if chat_id not in queues:
-        await update.message.reply_text('No queue exists. Create one using /createqueue.')
-        return
-    if user_id not in context.user_data or not context.user_data[user_id].get('create_queue'):
-        return
-
-    queue_name = update.message.text
-    if queue_name in queues[chat_id]:
-        await update.message.reply_text(
-            f'A queue with the name "{queue_name}" already exists. Please choose a different name.')
-    else:
-        queues[chat_id][queue_name] = []
-        await update.message.reply_text(
-            f'Queue "{queue_name}" created. Members can join the queue using /joinqueue {queue_name}.')
-    context.user_data[user_id]['create_queue'] = False
-
-
-async def handle_join_queue(update: Update, context: CallbackContext):
-    chat_id = update.message.chat_id
-    user_id = update.message.from_user.id
-    if chat_id in queues:
-        queue_name = update.message.text
-        if queue_name in queues[chat_id]:
-            if user_id not in queues[chat_id][queue_name]:
-                queues[chat_id][queue_name].append(user_id)
-                await update.message.reply_text(f'You have joined the queue "{queue_name}".')
-            else:
-                await update.message.reply_text(f'You are already in the queue "{queue_name}".')
-        else:
-            await update.message.reply_text(f'Queue "{queue_name}" does not exist. Create it using /createqueue.')
-    else:
-        await update.message.reply_text('No queue exists. Create one using /createqueue.')
-
-
-async def handle_delete_queue(update: Update, context: CallbackContext):
-    chat_id = update.message.chat_id
-    user_id = update.message.from_user.id
-    if chat_id in queues:
-        queue_name = update.message.text
-        if queue_name in queues[chat_id]:
-            del queues[chat_id][queue_name]
-            await update.message.reply_text(f'Queue "{queue_name}" deleted.')
-        else:
-            await update.message.reply_text(f'Queue "{queue_name}" does not exist.')
-    else:
-        await update.message.reply_text('No queue exists. Create one using /createqueue.')
-
-
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f'Update {update} caused error {context.error}')
 
