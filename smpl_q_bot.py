@@ -1,24 +1,12 @@
-#!/usr/bin/env python
-# pylint: disable=unused-argument, import-error
-# This program is dedicated to the public domain under the CC0 license.
-
-"""
-Simple Bot to reply to Telegram messages.
-
-First, a few handler functions are defined. Then, those functions are passed to
-the Application and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-
-Usage:
-Basic Echobot example, repeats messages.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
-
 import logging
-
-from telegram import ForceReply, Update
+import itertools
+from datetime import datetime
+from typing import Final
+from telegram import Update, ForceReply
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+
+TOKEN: Final = 'SECRET'
+BOT_USERNAME: Final = '@smpl_q_bot'
 
 # Enable logging
 logging.basicConfig(
@@ -28,6 +16,15 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
+
+#Queues
+q = []
+class CustomQueue:
+    id_obj = itertools.count()
+
+    def __init__(self, creation_time):
+        self.ID = next(CustomQueue.id_obj)
+        self.creation_time = creation_time
 
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -39,6 +36,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         rf"Hi {user.mention_html()}!",
         reply_markup=ForceReply(selective=True),
     )
+
+async def create_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    creation_time = update.message.date
+    q.append(CustomQueue(creation_time))
+    await update.message.reply_text("New Queue has been created.")
+
+async def list_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    head_row = "id\tdate\n"
+    queues = ""
+    for i in range(0, len(q)):
+        queues = queues + str(q[i].ID) + "\t" + str(q[i].creation_time) + "\n"
+    text = head_row + queues
+    await update.message.reply_text(text)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -54,11 +64,13 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("TOKEN").build()
+    application = Application.builder().token(TOKEN).build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("create_queue", create_queue))
+    application.add_handler(CommandHandler("list_queue", list_queue))
 
     # on non command i.e message - echo the message on Telegram
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
