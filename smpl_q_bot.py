@@ -1,11 +1,10 @@
-import logging
-import itertools
+import itertools, logging
 from datetime import datetime
 from typing import Final
 from telegram import Update, ForceReply
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-TOKEN: Final = 'SECRET'
+TOKEN: Final = '6427706088:AAH63ZYLfr0xi3xs8F5zo19oHCjk7NoZ0oY'
 BOT_USERNAME: Final = '@smpl_q_bot'
 
 # Enable logging
@@ -26,10 +25,8 @@ class CustomQueue:
         self.ID = next(CustomQueue.id_obj)
         self.creation_time = creation_time
 
-
-# Define a few command handlers. These usually take the two arguments update and
-# context.
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+#Commands
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
     await update.message.reply_html(
@@ -52,9 +49,10 @@ async def list_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /help is issued."""
-    await update.message.reply_text("Help!")
-
+    await update.message.reply_text('/create_queue - Create new queue\n'
+                                    '/joinqueue - join to exist queue\n'
+                                    '/list_queue - show all exist queue\n'
+                                    '/deletequeue - delete exist queue')
 
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Echo the user message."""
@@ -67,7 +65,7 @@ def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     # on different commands - answer in Telegram
-    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("create_queue", create_queue))
     application.add_handler(CommandHandler("list_queue", list_queue))
