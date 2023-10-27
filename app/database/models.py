@@ -1,3 +1,6 @@
+import asyncpg
+import asyncio
+
 from sqlalchemy import BigInteger, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
@@ -18,7 +21,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
-    username: Mapped[str] = mapped_column()
+    nickname: Mapped[str] = mapped_column()
 
 
 class Group(Base):
