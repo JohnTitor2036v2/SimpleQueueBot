@@ -1,24 +1,23 @@
-from app.database.models import User, Queue, Group, async_session, engine
+from app.database.models import User, Queue, Group, async_session
 from sqlalchemy import select
 
-async def new_queue(tg_id, nickname, tg_group_id, group_name, queue_name, position):
-    user_stm = User.insert().values(tg_id=tg_id, nickname=nickname)
-    engine.execute(user_stm)
-
-    user_id = engine.execute(f'SELECT id FROM users WHERE tg_id = {tg_id}')
-
-    group_stm = Group.insert().values(tg_id=tg_group_id, name=group_name)
-    engine.execute(group_stm)
-
-    group_id = engine.execute(f'SELECT id FROM groups WHERE tg_id = {tg_group_id}') 
-
-    queue_stm = Queue.insert().values(queue_name=queue_name, 
-                                group_id=group_id,  
-                                user_id=user_id,
-                                position=position) 
-    engine.execute(queue_stm) 
 
 async def get_queues():
     async with async_session() as session:
         result = await session.execute(select(Queue))
         return result
+
+
+async def add_queue(queue_name):
+    async with async_session() as session:
+        new_queue = Queue(queue_name=queue_name)
+        session.add(new_queue)
+        await session.commit()
+
+
+async def add_user(user_id):
+    # user =
+    async with async_session() as session:
+        new_user = User(user_id=user_id)
+        session.add(new_user)
+        await session.commit()

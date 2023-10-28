@@ -19,19 +19,16 @@ class Base(AsyncAttrs, DeclarativeBase):
 class User(Base):
     __tablename__ = 'users'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    tg_id = mapped_column(BigInteger)
+    tg_id = mapped_column(BigInteger, primary_key=True)
     nickname: Mapped[str] = mapped_column()
 
 
 class Group(Base):
     __tablename__ = 'groups'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    tg_id = mapped_column(BigInteger)
-    name: Mapped[str] = mapped_column()
+    tg_id = mapped_column(BigInteger, primary_key=True)
 
-    queues = relationship('Queue', back_populates='group')
+    # queues = relationship('Queue', back_populates='group')
 
 
 class Queue(Base):
@@ -40,11 +37,17 @@ class Queue(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     queue_name: Mapped[str] = mapped_column()
     group_id: Mapped[int] = mapped_column(ForeignKey('groups.id'))
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    position: Mapped[int] = mapped_column()
 
-    users = relationship('User', back_populates='queues')
-    group = relationship('Group', back_populates='queues')
+    # users = relationship('User', back_populates='queues')
+    # group = relationship('Group', back_populates='queues')
+
+
+class Follow(Base):
+    __tablename__ = 'follows'
+
+    following_user_id: Mapped[int] = mapped_column(ForeignKey('users.tg_id'))
+    following_queue_id: Mapped[int] = mapped_column(ForeignKey('queues.id'))
+    position: Mapped[int] = mapped_column()
 
 
 async def async_main():
