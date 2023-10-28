@@ -17,6 +17,12 @@ async def cmd_start(message: Message):
         await message.answer(f'Welcome back, {nickname}!', reply_markup=await kb.main())
 
 
+@router.message(Command('showqueue'))
+async def cmd_show_all(message: Message):
+    queues = await rq.get_queues()
+    await message.answer(queues)
+
+
 @router.message(F.text == 'Show Queue')
 async def queue(message: Message):
     await message.answer('Choose a queue to see more information', reply_markup=await kb.show_queue())
