@@ -1,9 +1,4 @@
 config.py
 __pycache__/
-app/__pycache__/
-app/database/__pycache__/
-__pycache__/config.cpython-310.pyc
-app/__pycache__/handlers.cpython-310.pyc
-app/__pycache__/keyboards.cpython-310.pyc
-app/database/__pycache__/models.cpython-310.pyc
-app/database/__pycache__/request.cpython-310.pyc
+app/__pycache__
+app/database/__pycache__

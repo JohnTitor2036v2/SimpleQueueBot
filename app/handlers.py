@@ -10,10 +10,10 @@ router = Router()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    if not rq.add_user(User.id, User.first_name):
-        await message.answer(f'Welcome, {User.first_name}', reply_markup=await kb.main())
+    if not await rq.add_user(message.from_user.id, message.from_user.first_name):
+        await message.answer(f'Welcome, {message.from_user.first_name}', reply_markup=await kb.main())
     else:
-        nickname = rq.get_user_nickname(User.id)
+        nickname = message.from_user.first_name
         await message.answer(f'Welcome back, {nickname}!', reply_markup=await kb.main())
 
 

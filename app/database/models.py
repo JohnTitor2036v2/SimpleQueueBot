@@ -1,12 +1,13 @@
 from sqlalchemy import BigInteger, ForeignKey
-from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
-from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncSession, create_async_engine
 
 from config import SQLALCHEMY_URL
 
 engine = create_async_engine(SQLALCHEMY_URL, echo=True)
 
-async_session = async_sessionmaker(engine)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -20,7 +21,7 @@ class User(Base):
     nickname: Mapped[str] = mapped_column()
 
     # Relationships
-    followed_queues = relationship('Queue', back_populates='followers')
+    # followed_queues = relationship('Queue', back_populates='followers')
 
 
 class Group(Base):
@@ -29,7 +30,7 @@ class Group(Base):
     tg_id = mapped_column(BigInteger, primary_key=True)
 
     # Relationships
-    queues = relationship('Queue', back_populates='groups')
+    # queues = relationship('Queue', back_populates='groups')
 
 
 class Queue(Base):
@@ -40,8 +41,8 @@ class Queue(Base):
     group_id: Mapped[int] = mapped_column(ForeignKey('groups.tg_id'))
 
     # Relationships
-    followed_users = relationship('User', back_populates='followed_queues')
-    groups = relationship('Group', back_populates='queues')
+    # followed_users = relationship('User', back_populates='followed_queues')
+    # groups = relationship('Group', back_populates='queues')
 
 
 class Follow(Base):
@@ -52,8 +53,8 @@ class Follow(Base):
     position: Mapped[int] = mapped_column(primary_key=True)
 
     # Relationships
-    user = relationship('User', back_populates='followed_queues')
-    queue = relationship('Queue', back_populates='followers')
+    # user = relationship('User', back_populates='followed_queues')
+    # queue = relationship('Queue', back_populates='followers')
 
 
 async def async_main():

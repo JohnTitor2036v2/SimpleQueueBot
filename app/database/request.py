@@ -19,20 +19,16 @@ async def add_queue(queue_name):
 
 async def add_user(user_id, user_name):
     async with async_session() as session:
-        exists = await session.query(User).filter_by(id=user_id).first()
-        if exists:
-            return True
-        else:
-            new_user = User(id=user_id, nickname=user_name)
-            session.add(new_user)
-            session.commit()
-            return False
+        async with session.begin():
+            # Perform a query using execute method
+            exists = await session.execute(
+                select(User.tg_id).filter(User.tg_id == user_id)
+            )
+            user = exists.scalar()  # Retrieve the result
 
-
-async def get_user_nickname(user_id):
-    async with async_session() as session:
-        user = session.query(User).filter_by(id=user_id).first()
-        if user:
-            return {'nickname': user.nickname}
-        else:
-            return {'nickname': None}
+            if user is None:
+                new_user = User(tg_id=user_id, nickname=user_name)
+                session.add(new_user)
+                return False
+            else:
+                return True
