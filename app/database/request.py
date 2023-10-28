@@ -5,7 +5,9 @@ from sqlalchemy import select
 async def get_queues():
     async with async_session() as session:
         result = await session.execute(select(Queue))
-        return result
+        queues = result.scalars().all()  # Fetch all rows from the result
+        queue_info = '\n'.join([f"Queue ID: {queue.id}, Queue Name: {queue.queue_name}" for queue in queues])
+        return queue_info
 
 
 async def add_queue(queue_name):
