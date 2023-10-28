@@ -1,6 +1,3 @@
-import asyncpg
-import asyncio
-
 from sqlalchemy import BigInteger, ForeignKey
 from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
@@ -22,13 +19,17 @@ class User(Base):
     tg_id = mapped_column(BigInteger, primary_key=True)
     nickname: Mapped[str] = mapped_column()
 
+    # Relationships
+    followed_queues = relationship('Queue', back_populates='followers')
+
 
 class Group(Base):
     __tablename__ = 'groups'
 
     tg_id = mapped_column(BigInteger, primary_key=True)
 
-    # queues = relationship('Queue', back_populates='group')
+    # Relationships
+    queues = relationship('Queue', back_populates='groups')
 
 
 class Queue(Base):
@@ -38,8 +39,9 @@ class Queue(Base):
     queue_name: Mapped[str] = mapped_column()
     group_id: Mapped[int] = mapped_column(ForeignKey('groups.tg_id'))
 
-    # users = relationship('User', back_populates='queues')
-    # group = relationship('Group', back_populates='queues')
+    # Relationships
+    followed_users = relationship('User', back_populates='followed_queues')
+    groups = relationship('Group', back_populates='queues')
 
 
 class Follow(Base):
@@ -49,24 +51,11 @@ class Follow(Base):
     following_queue_id: Mapped[int] = mapped_column(ForeignKey('queues.id'), primary_key=True)
     position: Mapped[int] = mapped_column(primary_key=True)
 
+    # Relationships
+    user = relationship('User', back_populates='followed_queues')
+    queue = relationship('Queue', back_populates='followers')
+
 
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
-
-# Welcome message
-# Create queue function:
-# - Random
-# - Joinable
-# Join queue function:
-# - The first empty position
-# - The random empty position
-# - The specific empty position
-# - Const. Fila = 20
-# Show queue function:
-# - Show all queues
-# - Show specific function and all position
-# Delete queue function:
-# - Delete all queues
-# - Delete specific queue

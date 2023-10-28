@@ -1,0 +1,15 @@
+# Welcome message
+# Create queue function:
+# - Random
+# - Joinable
+# Join queue function:
+# - The first empty position
+# - The random empty position
+# - The specific empty position
+# - Const. Fila = 20
+# Show queue function:
+# - Show all queues
+# - Show specific function and all position
+# Delete queue function:
+# - Delete all queues
+# - Delete specific queue
