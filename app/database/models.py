@@ -36,7 +36,7 @@ class Queue(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     queue_name: Mapped[str] = mapped_column()
-    group_id: Mapped[int] = mapped_column(ForeignKey('groups.id'))
+    group_id: Mapped[int] = mapped_column(ForeignKey('groups.tg_id'))
 
     # users = relationship('User', back_populates='queues')
     # group = relationship('Group', back_populates='queues')
@@ -45,9 +45,9 @@ class Queue(Base):
 class Follow(Base):
     __tablename__ = 'follows'
 
-    following_user_id: Mapped[int] = mapped_column(ForeignKey('users.tg_id'))
-    following_queue_id: Mapped[int] = mapped_column(ForeignKey('queues.id'))
-    position: Mapped[int] = mapped_column()
+    following_user_id: Mapped[int] = mapped_column(ForeignKey('users.tg_id'), primary_key=True)
+    following_queue_id: Mapped[int] = mapped_column(ForeignKey('queues.id'), primary_key=True)
+    position: Mapped[int] = mapped_column(primary_key=True)
 
 
 async def async_main():
