@@ -1,8 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-
-from app.database.request import get_queues, add_queue
+import app.database.request as rq
 
 
 async def main():
@@ -16,6 +15,7 @@ async def main():
 
 
 async def create_queue():
+
     pass
 
 
@@ -28,12 +28,11 @@ async def leave_queue():
 
 
 async def show_queue():
-    pass
-    # queues_kb = InlineKeyboardBuilder()
-    # queues = await get_queues()
-    # for queue in queues:
-    #     queues_kb.add(InlineKeyboardButton(text=queue.queue_name, callback_data=f'queue_{queue.id}'))
-    # return queues_kb.adjust(2).as_markup()
+    queues_kb = InlineKeyboardBuilder()
+    queues = await rq.get_queues()
+    for queue in queues:
+        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'queue_{queue.id}'))
+    return queues_kb.adjust(3).as_markup()
 
 
 async def delete_queue_keyboard_button():
