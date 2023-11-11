@@ -16,20 +16,16 @@ class Base(AsyncAttrs, DeclarativeBase):
 class User(Base):
     __tablename__ = 'users'
 
-    tg_id = mapped_column(BigInteger, primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     nickname: Mapped[str] = mapped_column()
-
-    # Relationships
-    # followed_queues = relationship('Queue', back_populates='followers')
+    follows = relationship("Follow", backref="user")
 
 
 class Group(Base):
     __tablename__ = 'groups'
 
-    tg_id = mapped_column(BigInteger, primary_key=True)
-
-    # Relationships
-    # queues = relationship('Queue', back_populates='groups')
+    chat_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    chat_name: Mapped[str] = mapped_column()
 
 
 class Queue(Base):
@@ -37,24 +33,16 @@ class Queue(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     queue_name: Mapped[str] = mapped_column()
-    group_id: Mapped[int] = mapped_column(ForeignKey('groups.tg_id'))
-
-    # Relationships
-    # followed_users = relationship('User', back_populates='followed_queues')
-    # groups = relationship('Group', back_populates='queues')
+    chat_id: Mapped[int] = mapped_column(ForeignKey('groups.chat_id'))
+    follows = relationship("Follow", backref="queue")
 
 
 class Follow(Base):
     __tablename__ = 'follows'
 
-    following_user_id: Mapped[int] = mapped_column(ForeignKey('users.tg_id'), primary_key=True)
+    following_user_id: Mapped[int] = mapped_column(ForeignKey('users.user_id'), primary_key=True)
     following_queue_id: Mapped[int] = mapped_column(ForeignKey('queues.id'), primary_key=True)
-    position: Mapped[int] = mapped_column(primary_key=True)
-
-    # Relationships
-    # user = relationship('User', back_populates='followed_queues')
-    # queue = relationship('Queue', back_populates='followers')
-
+    position: Mapped[int] = mapped_column()
 
 async def async_main():
     async with engine.begin() as conn:

@@ -22,17 +22,32 @@ async def add_queue(queue_name):
         await session.commit()
 
 
-async def add_user(user_id, user_name):
+async def add_user(new_id, user_name):
     async with async_session() as session:
         async with session.begin():
             exists = await session.execute(
-                select(User.tg_id).filter(User.tg_id == user_id)
+                select(User.user_id).filter(User.user_id == new_id)
             )
             user = exists.scalar()
 
             if user is None:
-                new_user = User(tg_id=user_id, nickname=user_name)
+                new_user = User(user_id=new_id, nickname=user_name)
                 session.add(new_user)
+                return False
+            else:
+                return True
+            
+async def add_chat(chat_id, chat_name):
+    async with async_session() as session:
+        async with session.begin():
+            exists = await session.execute(
+                select(Group.chat_id).filter(Group.chat_id == chat_id)
+            )
+            chat = exists.scalar()
+
+            if chat is None:
+                new_chat = Group(chat_id=chat_id, chat_name=chat_name)
+                session.add(new_chat)
                 return False
             else:
                 return True
@@ -40,7 +55,7 @@ async def add_user(user_id, user_name):
 
 async def get_user_nickname(user_id):
     async with async_session() as session:
-        result = await session.execute(select(User.nickname).filter(User.tg_id == user_id))
+        result = await session.execute(select(User.nickname).filter(User.user_id == user_id))
         user = result.scalar()
         return user
 
