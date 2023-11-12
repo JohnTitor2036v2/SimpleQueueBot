@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from tabulate import tabulate
+from instances_for_main import bot
 
 import logging
 import app.keyboards as kb
@@ -47,8 +48,8 @@ async def cmd_start(message: Message):
 
 @router.message(Command('showqueues'))
 async def cmd_show_all(message: Message):
-    queues = await rq.get_queues()
-    await message.answer(queues)
+    queues = await rq.get_group_queues(message.chat.id)
+    await message.answer(str(queues))
 
 @router.message(Command('createqueue'))
 async def create_queue(message: Message):
@@ -68,6 +69,10 @@ async def naming_queue(message: Message):
             text = message.text[len('!name '):]
             QUEUE_NAME.append(text)
             ALLOWED_USER.clear()
+            size: int = await bot.get_chat_member_count(message.chat.id)
+            logging.info(f"Received message: {QUEUE_NAME[0]}")
+            logging.info(f"Received message: {size}")
+            await rq.add_queue(chat_id=message.chat.id, queue_name=text, size=size)
             await message.answer(f"{QUEUE_NAME[0]} has been added!")
 
 @router.callback_query(F.data == 'show_queue')

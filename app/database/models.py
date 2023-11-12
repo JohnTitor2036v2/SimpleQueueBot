@@ -34,6 +34,7 @@ class Queue(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     queue_name: Mapped[str] = mapped_column()
     chat_id: Mapped[int] = mapped_column(ForeignKey('groups.chat_id'))
+    size: Mapped[int] = mapped_column()
     follows = relationship("Follow", backref="queue")
 
 
