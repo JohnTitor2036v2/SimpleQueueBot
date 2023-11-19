@@ -1,5 +1,5 @@
 from app.database.models import User, Queue, Group, Follow, async_session
-from sqlalchemy import select
+from sqlalchemy import select, desc
 import logging
 
 
@@ -42,6 +42,7 @@ async def add_queue(chat_id, queue_name, size):
             else:
                 return True
 
+
 async def add_user(new_id, user_name):
     async with async_session() as session:
         async with session.begin():
@@ -56,7 +57,8 @@ async def add_user(new_id, user_name):
                 return False
             else:
                 return True
-            
+
+
 async def add_chat(chat_id, chat_name):
     async with async_session() as session:
         async with session.begin():
@@ -82,7 +84,7 @@ async def get_user_nickname(user_id):
 
 async def get_positions(queue_id):
     async with async_session() as session:
-        result = await session.execute(select(Follow).filter(Follow.following_queue_id == queue_id))
+        result = await session.execute(select(Follow).filter(Follow.following_queue_id == int(queue_id)))
         positions = result.scalars().all()
         return positions
 
@@ -93,3 +95,44 @@ async def get_queue(queue_id):
         queue = result.scalar()
         return queue
 
+
+async def get_queues(chat_id):
+    async with async_session() as session:
+        result = await session.execute(select(Queue).filter(Queue.chat_id == chat_id))
+        queues = result.scalars().all()
+        return queues
+
+
+async def get_queue_max_size(queue_id):
+    async with async_session() as session:
+        result = await session.execute(select(Queue.size).filter(Queue.id == queue_id))
+        max_position = result.scalar()
+        return max_position
+
+
+async def join_queue(user_id, chat_id, queue_name):
+    async with async_session() as session:
+        async with session.begin():
+            result = await session.execute(
+                select(Queue.id).where(Queue.chat_id == chat_id, Queue.queue_name == queue_name)
+            )
+            queue_id = result.scalar()
+
+            follow_exists_result = await session.execute(
+                select(Follow).where(Follow.following_user_id == user_id,
+                                     Follow.following_queue_id == queue_id)
+            )
+            follow_exists = follow_exists_result.scalar()
+
+            if follow_exists is None:
+                position_result = await session.execute(
+                    select(Follow.position).where(Follow.following_queue_id == queue_id).order_by(desc(Follow.position))
+                )
+                position = position_result.scalars().first()
+                if position is None:
+                    position = 0
+                follow_row = Follow(following_user_id=user_id, following_queue_id=queue_id, position=position + 1)
+                session.add(follow_row)
+                return False
+            else:
+                return True
