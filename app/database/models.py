@@ -18,7 +18,6 @@ class User(Base):
 
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     nickname: Mapped[str] = mapped_column()
-    follows = relationship("Follow", backref="user")
 
 
 class Group(Base):
@@ -31,19 +30,20 @@ class Group(Base):
 class Queue(Base):
     __tablename__ = 'queues'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     queue_name: Mapped[str] = mapped_column()
     chat_id: Mapped[int] = mapped_column(ForeignKey('groups.chat_id'))
     size: Mapped[int] = mapped_column()
-    follows = relationship("Follow", backref="queue")
 
 
 class Follow(Base):
     __tablename__ = 'follows'
 
-    following_user_id: Mapped[int] = mapped_column(ForeignKey('users.user_id'), primary_key=True)
-    following_queue_id: Mapped[int] = mapped_column(ForeignKey('queues.id'), primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    following_user_id: Mapped[int] = mapped_column(BigInteger)
+    following_queue_id: Mapped[int] = mapped_column(BigInteger)
     position: Mapped[int] = mapped_column()
+
 
 async def async_main():
     async with engine.begin() as conn:
