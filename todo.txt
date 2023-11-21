@@ -13,3 +13,4 @@
 # Delete queue function:
 # - Delete all queues
 # - Delete specific queue
+# - Go to the Mac
