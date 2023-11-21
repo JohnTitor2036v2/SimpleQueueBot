@@ -121,7 +121,7 @@ async def join_queue(user_id, chat_id, queue_name):
                 position_result = await session.execute(
                     select(Follow.position).where(Follow.following_queue_id == queue_id).order_by(asc(Follow.position))
                 )
-                positions_taken = [row.position for row in position_result.scalars() if isinstance(row, Follow)]
+                positions_taken = [row for row in position_result.scalars()]
 
                 if positions_taken:
                     available_positions = set(range(1, max(positions_taken) + 2)) - set(positions_taken)
