@@ -44,6 +44,7 @@ async def cmd_show_all(message: Message):
 @router.callback_query(F.data == 'create_queue')
 async def create_queue(callback: CallbackQuery):
     ALLOWED_USER.clear()
+    QUEUE_NAME.clear()
     if len(ALLOWED_USER) == 0:
         logging.info(f"Received message: {callback.from_user.id}")
         ALLOWED_USER.append(callback.from_user.id)
@@ -60,12 +61,13 @@ async def naming_queue(message: Message):
         if message.from_user.id == ALLOWED_USER[0] and len(QUEUE_NAME) == 0:
             text = message.text[len('!name '):]
             QUEUE_NAME.append(text)
-            ALLOWED_USER.clear()
             size: int = await bot.get_chat_member_count(message.chat.id)
             logging.info(f"Received message: {QUEUE_NAME[0]}")
             logging.info(f"Received message: {size}")
             await rq.add_queue(chat_id=message.chat.id, queue_name=text, size=size)
             await message.answer(f"{QUEUE_NAME[0]} has been added!")
+            ALLOWED_USER.clear()
+            QUEUE_NAME.clear()
 
 
 @router.callback_query(F.data == 'show_queue')
@@ -113,9 +115,9 @@ async def join_selected(callback: CallbackQuery):
     user_id = callback.from_user.id
     chat_id = callback.message.chat.id
     if not await rq.join_queue(user_id, chat_id, queue_name):
-        await callback.message.answer(f'You follow the queue {queue_name}')
+        await callback.message.answer(f'{callback.from_user.first_name} follows the queue {queue_name}')
     else:
-        await callback.message.answer(f'You already follow the queue {queue_name}')
+        await callback.message.answer(f'{callback.from_user.first_name} already follows the queue {queue_name}')
 
 
 @router.callback_query(F.data == 'leave_queue')
@@ -132,9 +134,9 @@ async def leave_selected(callback: CallbackQuery):
     user_id = callback.from_user.id
     chat_id = callback.message.chat.id
     if not await rq.leave_queue(user_id, chat_id, queue_name):
-        await callback.message.answer(f'You left the queue {queue_name}')
+        await callback.message.answer(f'{callback.from_user.first_name} left the queue {queue_name}')
     else:
-        await callback.message.answer(f'You were not in the queue {queue_name} anyway')
+        await callback.message.answer(f'{callback.from_user.first_name} were not in the queue {queue_name} anyway')
 
 
 @router.callback_query(F.data == 'delete_queue')
