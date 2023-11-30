@@ -6,6 +6,7 @@ from instances_for_main import bot
 import logging
 import app.keyboards as kb
 import app.database.request as rq
+import app.admin as admin
 
 router = Router()
 ALLOWED_USER = []
@@ -15,30 +16,33 @@ QUEUE_NAME = []
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     chat_type = message.chat.type
+    chat_id = message.chat.id
+    chat_name = message.chat.title
+    user_id = message.from_user.id
+
     if not chat_type == 'private':
-        chat_id = message.chat.id
-        chat_name = message.chat.title
+        if await admin.admin_filter(user_id, chat_id):
+            keyboard = await kb.admin_main()
+        else:
+            keyboard = await kb.main()
+
         if not await rq.add_chat(chat_id, chat_name):
             await message.answer(f"New chat added: {chat_id}, {chat_name}.")
         else:
             await message.answer(f"Chat was already in db: {chat_id}, {chat_name}.")
+
         if not await rq.add_user(message.from_user.id, message.from_user.first_name):
-            await message.answer(f'Welcome, {message.from_user.first_name}', reply_markup=await kb.main())
+            await message.answer(f'Welcome, {message.from_user.first_name}', reply_markup=keyboard)
         else:
             nickname = await rq.get_user_nickname(message.from_user.id)
-            await message.answer(f'Welcome back, {nickname}!', reply_markup=await kb.main())
+            await message.answer(f'Welcome back, {nickname}!', reply_markup=keyboard)
+
     else:
         if not await rq.add_user(message.from_user.id, message.from_user.first_name):
             await message.answer(f'Welcome, {message.from_user.first_name}', reply_markup=await kb.private_main())
         else:
             nickname = await rq.get_user_nickname(message.from_user.id)
             await message.answer(f'Welcome back, {nickname}!', reply_markup=await kb.private_main())
-
-
-@router.message(Command('showqueues'))
-async def cmd_show_all(message: Message):
-    queues = await rq.get_group_queues(message.chat.id)
-    await message.answer(str(queues))
 
 
 @router.callback_query(F.data == 'create_queue')
@@ -53,27 +57,26 @@ async def create_queue(callback: CallbackQuery):
         await callback.message.reply("Previous queue has not been named yet.")
 
 
-@router.message()
+@router.message(Command('name', prefix='!'))
 async def naming_queue(message: Message):
     logging.info(f"Received message: {message.text}")
     logging.info(f"Received message: {ALLOWED_USER}")
-    if '!name' in message.text:
-        if message.from_user.id == ALLOWED_USER[0] and len(QUEUE_NAME) == 0:
-            text = message.text[len('!name '):]
-            QUEUE_NAME.append(text)
-            size: int = await bot.get_chat_member_count(message.chat.id)
-            logging.info(f"Received message: {QUEUE_NAME[0]}")
-            logging.info(f"Received message: {size}")
-            await rq.add_queue(chat_id=message.chat.id, queue_name=text, size=size)
-            await message.answer(f"{QUEUE_NAME[0]} has been added!")
-            ALLOWED_USER.clear()
-            QUEUE_NAME.clear()
+    if message.from_user.id == ALLOWED_USER[0] and len(QUEUE_NAME) == 0:
+        text = message.text[len('!name '):]
+        QUEUE_NAME.append(text)
+        size: int = await bot.get_chat_member_count(message.chat.id)
+        logging.info(f"Received message: {QUEUE_NAME[0]}")
+        logging.info(f"Received message: {size}")
+        await rq.add_queue(chat_id=message.chat.id, queue_name=text, size=size)
+        await message.answer(f"{QUEUE_NAME[0]} has been added!")
+        ALLOWED_USER.clear()
+        QUEUE_NAME.clear()
 
 
 @router.callback_query(F.data == 'show_queue')
 async def show(callback: CallbackQuery):
     chat_id = callback.message.chat.id
-    await callback.message.answer('Choose a queue to see more information', reply_markup=await kb.show_queue(chat_id))
+    await callback.message.answer('Select a queue to see more information', reply_markup=await kb.show_queue(chat_id))
 
 
 @router.callback_query(F.data.startswith('show_'))
@@ -104,7 +107,7 @@ async def show_selected(callback: CallbackQuery):
 @router.callback_query(F.data == 'join_queue')
 async def join(callback: CallbackQuery):
     chat_id = callback.message.chat.id
-    await callback.message.answer('Choose a queue to join', reply_markup=await kb.join_queue(chat_id))
+    await callback.message.answer('Select a queue to join', reply_markup=await kb.join_queue(chat_id))
 
 
 @router.callback_query(F.data.startswith('join_'))
@@ -112,18 +115,22 @@ async def join_selected(callback: CallbackQuery):
     queue_id_str = callback.data.split('_')[1]
     queue_id = int(queue_id_str)
     queue_name = await rq.get_queue(queue_id)
+
     user_id = callback.from_user.id
+    username = callback.from_user.first_name
+    await rq.add_user(user_id, username)
+
     chat_id = callback.message.chat.id
     if not await rq.join_queue(user_id, chat_id, queue_name):
-        await callback.message.answer(f'{callback.from_user.first_name} follows the queue {queue_name}')
+        await callback.message.answer(f'{username} follows the queue {queue_name}')
     else:
-        await callback.message.answer(f'{callback.from_user.first_name} already follows the queue {queue_name}')
+        await callback.message.answer(f'{username} already follows the queue {queue_name}')
 
 
 @router.callback_query(F.data == 'leave_queue')
 async def leave(callback: CallbackQuery):
     chat_id = callback.message.chat.id
-    await callback.message.answer('Choose a queue to leave', reply_markup=await kb.leave_queue(chat_id))
+    await callback.message.answer('Select a queue to leave', reply_markup=await kb.leave_queue(chat_id))
 
 
 @router.callback_query(F.data.startswith('leave_'))
@@ -142,7 +149,7 @@ async def leave_selected(callback: CallbackQuery):
 @router.callback_query(F.data == 'delete_queue')
 async def delete(callback: CallbackQuery):
     chat_id = callback.message.chat.id
-    await callback.message.answer('Choose a queue to delete', reply_markup=await kb.delete_queue(chat_id))
+    await callback.message.answer('Select a queue to delete', reply_markup=await kb.delete_queue(chat_id))
 
 
 @router.callback_query(F.data.startswith('delete_'))
@@ -156,3 +163,16 @@ async def delete_selected(callback: CallbackQuery):
         await callback.message.answer(f"The queue {queue_name} has been deleted.")
     else:
         await callback.message.answer(f"The queue {queue_name} was not found.")
+
+
+# @router.callback_query(F.data == 'switch_user_position')
+# async def switch(callback: CallbackQuery):
+#     await callback.message.answer('Im here')
+#     user_id = callback.from_user.id
+#     chat_id = callback.message.chat.id
+#     if await admin.admin_filter(user_id, chat_id):
+#         admin.ALLOWED_ADMIN.clear()
+#         admin.ALLOWED_ADMIN.append(user_id)
+#         await callback.message.answer('Choose a queue to join', reply_markup=await kb.switch_first_step(chat_id))
+#     else:
+#         await callback.message.answer(f'{callback.from_user.first_name} u dnt hace access to this fnctn')
