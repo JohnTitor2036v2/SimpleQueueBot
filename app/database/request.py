@@ -1,5 +1,5 @@
 from app.database.models import User, Queue, Group, Follow, async_session
-from sqlalchemy import select, asc, delete, func
+from sqlalchemy import select, asc, delete, func, update
 import logging
 
 
@@ -177,3 +177,67 @@ async def delete_queue(chat_id, queue_name):
                 return False
             else:
                 return True
+
+
+async def switch_positions(queue_id, position2, position1):
+    async with async_session() as session:
+        async with session.begin():
+            follow1_result = await session.execute(
+                select(Follow).where(Follow.following_queue_id == queue_id, Follow.position == position1)
+            )
+            follow1 = follow1_result.scalar()
+
+            if not follow1:
+                return False
+            follow2_result = await session.execute(
+                select(Follow).where(Follow.following_queue_id == queue_id, Follow.position == position2)
+            )
+            follow2 = follow2_result.scalar()
+            if follow2 is None:
+                follow1.position = position2
+            else:
+                follow1.position, follow2.position = position2, position1
+
+            return True
+
+
+async def get_user_id_by_position(queue_id, position):
+    async with async_session() as session:
+        result = await session.execute(
+            select(Follow.following_user_id)
+            .where(Follow.following_queue_id == queue_id, Follow.position == position)
+        )
+        user_id = result.scalar()
+        return user_id
+
+
+async def leave_queue_by_admin(user_id, chat_id, queue_name):
+    async with async_session() as session:
+        async with session.begin():
+            result = await session.execute(
+                select(Queue.id).where(Queue.chat_id == chat_id, func.lower(Queue.queue_name) == func.lower(queue_name))
+            )
+            queue_id = result.scalar()
+
+            follow_exists_result = await session.execute(
+                select(Follow).where(Follow.following_user_id == user_id, Follow.following_queue_id == queue_id)
+            )
+            follow_exists = follow_exists_result.scalar()
+
+            if follow_exists is not None:
+                await session.execute(
+                    delete(Follow).where(Follow.following_user_id == user_id, Follow.following_queue_id == queue_id)
+                )
+                return False
+            else:
+                return True
+
+
+async def get_user_id_by_position_and_queue(queue_id, position):
+    async with async_session() as session:
+        result = await session.execute(
+            select(Follow.following_user_id)
+            .where(Follow.following_queue_id == queue_id, Follow.position == position)
+        )
+        user_id = result.scalar()
+        return user_id

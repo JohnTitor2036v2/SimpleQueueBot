@@ -5,6 +5,7 @@ from instances_for_main import bot, dp
 from app.handlers import router as router_handlers
 from app.admin import router as router_admin
 from app.database.models import async_main
+from aiogram.utils.callback_answer import CallbackAnswerMiddleware
 
 
 async def main():
@@ -16,7 +17,9 @@ async def main():
     await async_main()
     dp.include_router(router_handlers)
     dp.include_router(router_admin)
-    await dp.start_polling(bot, skip_updates=True)
+    dp.callback_query.middleware(CallbackAnswerMiddleware())
+    await bot.delete_webhook(True)
+    await dp.start_polling(bot)
 
 
 if __name__ == '__main__':

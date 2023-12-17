@@ -1,12 +1,14 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
+
 from instances_for_main import bot
 
 import logging
 import app.keyboards as kb
 import app.database.request as rq
 import app.admin as admin
+
 
 router = Router()
 ALLOWED_USER = []
@@ -28,8 +30,6 @@ async def cmd_start(message: Message):
 
         if not await rq.add_chat(chat_id, chat_name):
             await message.answer(f"New chat added: {chat_id}, {chat_name}.")
-        else:
-            await message.answer(f"Chat was already in db: {chat_id}, {chat_name}.")
 
         if not await rq.add_user(message.from_user.id, message.from_user.first_name):
             await message.answer(f'Welcome, {message.from_user.first_name}', reply_markup=keyboard)
@@ -163,16 +163,3 @@ async def delete_selected(callback: CallbackQuery):
         await callback.message.answer(f"The queue {queue_name} has been deleted.")
     else:
         await callback.message.answer(f"The queue {queue_name} was not found.")
-
-
-# @router.callback_query(F.data == 'switch_user_position')
-# async def switch(callback: CallbackQuery):
-#     await callback.message.answer('Im here')
-#     user_id = callback.from_user.id
-#     chat_id = callback.message.chat.id
-#     if await admin.admin_filter(user_id, chat_id):
-#         admin.ALLOWED_ADMIN.clear()
-#         admin.ALLOWED_ADMIN.append(user_id)
-#         await callback.message.answer('Choose a queue to join', reply_markup=await kb.switch_first_step(chat_id))
-#     else:
-#         await callback.message.answer(f'{callback.from_user.first_name} u dnt hace access to this fnctn')

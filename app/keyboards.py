@@ -22,7 +22,7 @@ async def admin_main():
     main_kb.add(InlineKeyboardButton(text='Show Queue', callback_data='show_queue'))
     main_kb.add(InlineKeyboardButton(text='Delete Queue', callback_data='delete_queue'))
     main_kb.add(InlineKeyboardButton(text='Switch User Position', callback_data='switch_user_position'))
-    main_kb.add(InlineKeyboardButton(text='Delete User Position', callback_data='delete_user_position'))
+    # main_kb.add(InlineKeyboardButton(text='Delete User Position', callback_data='delete_user_position'))
     return main_kb.adjust(2).as_markup()
 
 
@@ -81,6 +81,38 @@ async def switch_second_step(queue_id):
         nickname = await rq.get_user_nickname(position.following_user_id)
         queues_kb.add(InlineKeyboardButton(
             text=f'{position.position}. {nickname}',
-            callback_data=f'switch_{position.position}'
+            callback_data=f'second_{position.position}_{queue_id}'
         ))
     return queues_kb.adjust(1).as_markup()
+
+
+async def switch_third_step(user_pos, queue_id):
+    queues_kb = InlineKeyboardBuilder()
+    positions = await rq.get_positions(queue_id)
+
+    pos_to_nick = {}
+
+    for position in positions:
+        if position.position and position.following_user_id:
+            nickname = await rq.get_user_nickname(position.following_user_id)
+            pos_to_nick[position.position] = nickname
+
+    max_pos = await rq.get_queue_max_size(queue_id)
+    for pos in range(1, int(max_pos) + 1):
+        nickname = pos_to_nick.get(pos, "")
+        if pos == user_pos:
+            nickname = 'do not change position'
+        queues_kb.add(InlineKeyboardButton(
+            text=f'{pos}. {nickname}',
+            callback_data=f'switch_{queue_id}_{pos}_{user_pos}'
+        ))
+
+    queues_kb.add(InlineKeyboardButton(
+        text='Remove User from Queue',
+        callback_data=f'remove_{queue_id}_{await rq.get_user_id_by_position_and_queue(queue_id, user_pos)}'
+    ))
+
+    return queues_kb.adjust(1).as_markup()
+
+
+
