@@ -31,7 +31,7 @@ async def add_queue(chat_id, queue_name, size):
             if user is None:
                 new_queu = Queue(queue_name=queue_name, chat_id=chat_id, size=size)
                 session.add(new_queu)
-                loggin.info(f"FINAL SQL: INSERT INTO queues (queue_name, chat_id, size) VALUES ({queue_name}, {chat_id}, {size})")
+                logging.info(f"FINAL SQL: INSERT INTO queues (queue_name, chat_id, size) VALUES ({queue_name}, {chat_id}, {size})")
                 return False
             else:
                 return True
