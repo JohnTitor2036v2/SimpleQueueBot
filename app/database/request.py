@@ -31,6 +31,7 @@ async def add_queue(chat_id, queue_name, size):
             if user is None:
                 new_queu = Queue(queue_name=queue_name, chat_id=chat_id, size=size)
                 session.add(new_queu)
+                loggin.info(f"FINAL SQL: INSERT INTO queues (queue_name, chat_id, size) VALUES ({queue_name}, {chat_id}, {size})")
                 return False
             else:
                 return True
@@ -47,6 +48,7 @@ async def add_user(new_id, user_name):
             if user is None:
                 new_user = User(user_id=new_id, nickname=user_name)
                 session.add(new_user)
+                logging.info(f"FINAL SQL: INSERT INTO users (user_id, nickname) VALUES ({new_id}, {user_name})")
                 return False
             else:
                 return True
@@ -63,6 +65,7 @@ async def add_chat(chat_id, chat_name):
             if chat is None:
                 new_chat = Group(chat_id=chat_id, chat_name=chat_name)
                 session.add(new_chat)
+                logging.info(f"FINAL SQL: INSERT INTO groups (chat_id, chat_name) VALUES ({chat_id}, {chat_name})")
                 return False
             else:
                 return True
@@ -131,6 +134,7 @@ async def join_queue(user_id, chat_id, queue_name):
 
                 follow_row = Follow(following_user_id=user_id, following_queue_id=queue_id, position=new_position)
                 session.add(follow_row)
+                logging.info(f"FINAL SQL: INSERT INTO follows (following_user_id, following_queue_id, position) VALUES ({user_id}, {queue_id}, {new_position})")
                 return False
             else:
                 return True
@@ -153,6 +157,7 @@ async def leave_queue(user_id, chat_id, queue_name):
                 await session.execute(
                     delete(Follow).where(Follow.following_user_id == user_id, Follow.following_queue_id == queue_id)
                 )
+                logging.info(f"FINAL SQL: DELETE FROM follows WHERE (following_user_id, following_queue_id) VALUES ({user_id}, {queue_id})")
                 return False
             else:
                 return True
@@ -170,10 +175,12 @@ async def delete_queue(chat_id, queue_name):
                 await session.execute(
                     delete(Follow).where(Follow.following_queue_id == queue_id)
                 )
+                logging.info(f"FINAL SQL: DELETE FROM follows WHERE (following_queue_id) VALUES ({queue_id})")
 
                 await session.execute(
                     delete(Queue).where(Queue.id == queue_id)
                 )
+                logging.info(f"FINAL SQL: DELETE FROM queues WHERE (id) VALUES ({queue_id})")
                 return False
             else:
                 return True
