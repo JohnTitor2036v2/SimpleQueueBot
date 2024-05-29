@@ -4,7 +4,7 @@ import asyncio
 from instances_for_main import bot, dp
 from app.handlers import router as router_handlers
 from app.admin import router as router_admin
-from app.database.models import async_main
+from app.database.new_models import async_main
 from aiogram.utils.callback_answer import CallbackAnswerMiddleware
 
 

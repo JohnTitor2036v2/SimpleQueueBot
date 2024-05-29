@@ -1,5 +1,5 @@
 from app.database.models import User, Queue, Group, Follow, async_session
-from sqlalchemy import select, asc, delete, func, update
+from sqlalchemy import select, asc, delete, func, update, insert
 import logging
 
 
@@ -60,11 +60,14 @@ async def add_chat(chat_id, chat_name):
             exists = await session.execute(
                 select(Group.chat_id).filter(Group.chat_id == chat_id)
             )
-            chat = exists.scalar()
+            user = exists.scalar()
 
-            if chat is None:
-                new_chat = Group(chat_id=chat_id, chat_name=chat_name)
-                session.add(new_chat)
+            if user is None:
+                stmt = (
+                    insert(Group).
+                    values(chat_id=chat_id, chat_name=chat_name)
+                )
+                session.execute(stmt)
                 logging.info(f"FINAL SQL: INSERT INTO groups (chat_id, chat_name) VALUES ({chat_id}, {chat_name})")
                 return False
             else:

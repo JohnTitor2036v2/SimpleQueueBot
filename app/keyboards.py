@@ -1,7 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-import app.database.request as rq
+import app.database.new_request as rq
 
 
 async def main():
@@ -38,7 +38,7 @@ async def join_queue(chat_id):
     queues_kb = InlineKeyboardBuilder()
     queues = await rq.get_queues(chat_id)
     for queue in queues:
-        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'join_{queue.id}'))
+        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'join_{queue.queue_id}'))
     return queues_kb.adjust(3).as_markup()
 
 
@@ -46,7 +46,7 @@ async def leave_queue(chat_id):
     queues_kb = InlineKeyboardBuilder()
     queues = await rq.get_queues(chat_id)
     for queue in queues:
-        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'leave_{queue.id}'))
+        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'leave_{queue.queue_id}'))
     return queues_kb.adjust(3).as_markup()
 
 
@@ -54,7 +54,7 @@ async def show_queue(chat_id):
     queues_kb = InlineKeyboardBuilder()
     queues = await rq.get_queues(chat_id)
     for queue in queues:
-        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'show_{queue.id}'))
+        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'show_{queue.queue_id}'))
     return queues_kb.adjust(3).as_markup()
 
 
@@ -62,7 +62,7 @@ async def delete_queue(chat_id):
     queues_kb = InlineKeyboardBuilder()
     queues = await rq.get_queues(chat_id)
     for queue in queues:
-        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'delete_{queue.id}'))
+        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'delete_{queue.queue_id}'))
     return queues_kb.adjust(3).as_markup()
 
 
@@ -70,7 +70,7 @@ async def switch_first_step(chat_id):
     queues_kb = InlineKeyboardBuilder()
     queues = await rq.get_queues(chat_id)
     for queue in queues:
-        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'first_{queue.id}'))
+        queues_kb.add(InlineKeyboardButton(text=f'{queue.queue_name}', callback_data=f'first_{queue.queue_id}'))
     return queues_kb.adjust(3).as_markup()
 
 
@@ -78,10 +78,10 @@ async def switch_second_step(queue_id):
     queues_kb = InlineKeyboardBuilder()
     positions = await rq.get_positions(queue_id)
     for position in positions:
-        nickname = await rq.get_user_nickname(position.following_user_id)
+        nickname = await rq.get_user_nickname(position.user_id)
         queues_kb.add(InlineKeyboardButton(
-            text=f'{position.position}. {nickname}',
-            callback_data=f'second_{position.position}_{queue_id}'
+            text=f'{position.user_position}. {nickname}',
+            callback_data=f'second_{position.user_position}_{queue_id}'
         ))
     return queues_kb.adjust(1).as_markup()
 
@@ -93,9 +93,9 @@ async def switch_third_step(user_pos, queue_id):
     pos_to_nick = {}
 
     for position in positions:
-        if position.position and position.following_user_id:
-            nickname = await rq.get_user_nickname(position.following_user_id)
-            pos_to_nick[position.position] = nickname
+        if position.user_position and position.user_id:
+            nickname = await rq.get_user_nickname(position.user_id)
+            pos_to_nick[position.user_position] = nickname
 
     max_pos = await rq.get_queue_max_size(queue_id)
     for pos in range(1, int(max_pos) + 1):
@@ -109,10 +109,7 @@ async def switch_third_step(user_pos, queue_id):
 
     queues_kb.add(InlineKeyboardButton(
         text='Remove User from Queue',
-        callback_data=f'remove_{queue_id}_{await rq.get_user_id_by_position_and_queue(queue_id, user_pos)}'
+        callback_data=f'remove_{queue_id}_{await rq.get_user_position(queue_id, user_pos)}'
     ))
 
     return queues_kb.adjust(1).as_markup()
-
-
-
