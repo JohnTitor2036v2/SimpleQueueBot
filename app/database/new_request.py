@@ -7,13 +7,13 @@ import logging
 async def add_group(group_id, group_name, group_type):
     async with async_session() as session:
         async with session.begin():
-            exists = await session.execute(
+            group = await session.execute(
                 select(Group.group_id)
                 .filter_by(group_id=group_id)
             )
-            user = exists.scalar()
+            group = group.scalar()
 
-            if user is None:
+            if group is None:
                 session.add(Group(group_id=group_id, group_name=group_name, group_type=group_type))
                 return False
             else:
@@ -23,11 +23,11 @@ async def add_group(group_id, group_name, group_type):
 async def add_user(user_id, nickname):
     async with async_session() as session:
         async with session.begin():
-            exists = await session.execute(
+            user = await session.execute(
                 select(User.user_id)
                 .filter_by(user_id=user_id)
             )
-            user = exists.scalar()
+            user = user.scalar()
 
             if user is None:
                 session.add(User(user_id=user_id, nickname=nickname))
@@ -39,11 +39,11 @@ async def add_user(user_id, nickname):
 async def add_queue(group_id, queue_name, size):
     async with async_session() as session:
         async with session.begin():
-            exists = await session.execute(
+            queue = await session.execute(
                 select(Queue.group_id, Queue.queue_name)
                 .filter_by(group_id=group_id, queue_name=queue_name)
             )
-            user = exists.scalar()
+            queue = queue.scalar()
 
             if user is None:
                 session.add(Queue(queue_name=queue_name, group_id=group_id, size=size))
